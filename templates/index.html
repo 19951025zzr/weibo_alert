@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>人工修复映射关系</title>
+    <!--加载bootstrap框架-->
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <!--js页面封装-->
+    <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="row">
+    <div class="col-lg-3"></div>
+    <div class="col-lg-6 text-center">
+        <h2 class="text-center " id = 'service_control'> 服务控制 </h2>
+        <button class="btn btn-default" type="button" onclick="service_control('start')"> 启动 </button>
+        <button class="btn btn-default" type="button" onclick="service_control('close')"> 关闭 </button>
+    </div>
+    <div class="col-lg-3"></div>
+</div><!-- /.row -->
+<div class="row">
+
+    <h1 class="text-center " id="verify_code"> 登录区 </h1>
+    <div class="col-lg-3"></div>
+    <div class="col-lg-6 text-center">
+        <img width="95" height="34" id="verify_img" src="">
+        <button class="btn btn-default" type="button" onclick="get_verify_code()"> 获取验证码 </button>
+        <input minlength="5" maxlength="5" type="text" class="form-control" id="verify" placeholder="请输入验证码">
+        <button class="btn btn-default"  type="button" onclick="verify_code()"> 提交验证码 </button>
+        <button class="btn btn-default"  type="button" onclick="run()"> 检查更新 </button>
+    </div>
+    <div class="col-lg-3"></div>
+</div><!-- /.row -->
+<div class="row">
+    <div class="col-lg-3"></div>
+    <div class="col-lg-6 text-center">
+
+        <button class="btn btn-default" id = 'btn1' type="button" onclick="get_model()"> 查询结果 </button>
+        <h6 class="text-center "> ------------- </h6>
+    </div>
+    <div class="col-lg-3"></div>
+</div>
+
+
+<div class="row">
+    <div class="col-lg-3"></div>
+    <div class="col-lg-6 text-center">
+        <button class="btn btn-default" type="button" onclick="get_result()"> 来一个 </button>
+        -------
+        <button class="btn btn-default" type="button" onclick="post_data('没有匹配')"> 没有匹配 </button>
+        <button class="btn btn-default" type="button" onclick="post_data('无法判断')"> 无法判断 </button>
+        <button class="btn btn-default" type="button" onclick="post_data('信息不全')"> 信息不全 </button>
+        <button class="btn btn-default" type="button" onclick="post_data('+')"> 上传 </button>
+    </div>
+    <div class="col-lg-3"></div>
+</div>
+<script>
+    var host = 'http://192.168.3.25:9500/';
+
+    // var host = 'http://127.0.0.1:5000/';
+
+    var cache = {};
+
+    function run() {
+        verify = document.getElementById("verify").value
+        $.ajax({
+            type: "POST",
+            url: host + "run",
+            dataType: "JSON",
+            // 允许携带证书
+            xhrFields: {
+                withCredentials: true
+            },
+            // 允许跨域
+            crossDomain: true,
+
+
+            success: function (data) {
+
+                $('#verify_code').html(data.msg);
+
+            },
+            error: function () {
+                alert('接口调用失败')
+            },
+        })
+    }
+
+
+    function verify_code() {
+        verify = document.getElementById("verify").value
+        $.ajax({
+            type: "POST",
+            url: host + "verify_code",
+            dataType: "JSON",
+            // 允许携带证书
+            xhrFields: {
+                withCredentials: true
+            },
+            // 允许跨域
+            crossDomain: true,
+             data: {
+                'verify': verify
+            },
+
+            success: function (data) {
+                if (data != null && data.errno == 0) {
+                    $('#verify_code').html(data.msg);
+                } else if (data != null && data.errno == -1) {
+                    $('#verify_code').html(data.msg);
+                    get_verify_code()
+                } else {
+                    alert(data.msg)
+                }
+
+            },
+            error: function () {
+                alert('接口调用失败')
+            },
+        })
+    }
+
+
+    function get_verify_code() {
+        $.ajax({
+            type: "POST",
+            url: host + "get_verify_code",
+            dataType: "JSON",
+            // 允许携带证书
+            xhrFields: {
+                withCredentials: true
+            },
+            // 允许跨域
+            crossDomain: true,
+
+            success: function (data) {
+                if (data != null && data.errno == 0) {
+                    $('#verify_code').html(data.msg);
+
+                    var shopping = document.getElementById("verify_img").setAttribute("src", data.result.url)
+                } else {
+                    alert(data.msg)
+                }
+
+            },
+            error: function () {
+                alert('接口调用失败')
+            },
+        })
+    }
+
+
+    function service_control(status) {
+        $.ajax({
+            type: "POST",
+            url: host + "service_control",
+            dataType: "JSON",
+            // 允许携带证书
+            xhrFields: {
+                withCredentials: true
+            },
+            // 允许跨域
+            crossDomain: true,
+            data: {
+                'status': status
+            },
+            success: function (data) {
+                if (data != null && data.errno == 0) {
+                    $('#service_control').html(data.msg);
+                } else {
+                    alert(data.msg)
+                }
+
+            },
+            error: function () {
+                alert('接口调用失败')
+            },
+        })
+    }
+
+    function get_result() {
+        $.ajax({
+            type: "POST",
+            url: host + "cut_name",
+            dataType: "JSON",
+            // 允许携带证书
+            xhrFields: {
+                withCredentials: true
+            },
+            // 允许跨域
+            crossDomain: true,
+            success: function (data) {
+                if (data != null && data.errno == 0) {
+
+
+                    var ht = ''
+
+                    cache['tittle'] = data.result.tittle;
+
+                    $('#1id').html(cache['tittle']);
+                    for (var i = 0; i < data.result.param.length; i++) {
+                        if (data.result.param[i].indexOf('check') != -1) {
+                            val = data.result.param[i].split(',')[0];
+                            ht = ht + '<label class="checkbox-inline"><input name="cut_name" type="checkbox" id="'+ i +'" value="' + val + ' " checked> ' + val + ' </label>'
+                        } else {
+                            ht = ht + '<label class="checkbox-inline"><input name="cut_name" type="checkbox" id="'+ i +'" value="' + data.result.param[i] + ' "> ' + data.result.param[i] + ' </label>'
+
+                        }
+                    }
+                    var parent = document.getElementById("op");
+                    parent.innerHTML = ht;
+                } else {
+                    alert(data.msg)
+                }
+
+            },
+            error: function () {
+                alert('接口调用失败')
+            },
+        })
+    }
+
+    function get_model() {
+        $('#btn1').html('查询中...');
+
+
+        obj = document.getElementsByName("cut_name");
+        check_val = [];
+        for(k in obj){
+            if(obj[k].checked){
+                check_val.push(obj[k].value.replace(' ', ''));
+            }
+
+        }
+        $.ajax({
+            type: "POST",
+            url: host + "select_model",
+            dataType: "JSON",
+            // 允许携带证书
+            xhrFields: {
+                withCredentials: true
+            },
+            data: {
+                'param': check_val.join()
+            },
+            // 允许跨域
+            crossDomain: true,
+            success: function (data) {
+                if (data != null && data.errno == 0) {
+                    var ht = '';
+                    cache['model_list'] = data.result;
+                    for (var i = 0; i < data.result.length; i++) {
+                        ht = ht + '<div class="radio"><label><input type="radio" name="model" value="' + i + '" >' + data.result[i].model_name + '</label></div>'
+                    }
+                    var parent = document.getElementById("result");
+                    parent.innerHTML = ht
+                    $('#btn1').html('查询结果');
+                } else {
+                    alert(data.msg)
+                }
+
+            },
+            error: function () {
+                alert('接口调用失败')
+            },
+        })
+    }
+
+    function post_data(param) {
+        if (cache['model_list'].length == 0 || $("input[name='model']:radio:checked").val() == undefined) {
+            model = {
+                'model_id': null,
+                'model_name': null,
+                'api_version': param,
+                'tittle': cache['tittle']
+            }
+        } else {
+            var i = $("input[name='model']:radio:checked").val();
+
+            var model_info = cache['model_list'][i];
+
+            model = {
+                'model_id': model_info['model_id'],
+                'model_name': model_info['model_name'],
+                'api_version': param,
+                'tittle': cache['tittle']
+            }
+        }
+
+
+
+        $.ajax({
+            type: "POST",
+            url: host + "save_data",
+            dataType: "JSON",
+            // 允许携带证书
+            xhrFields: {
+                withCredentials: true
+            },
+            // 允许跨域
+            crossDomain: true,
+
+            data: model,
+            success: function (data) {
+                if (data != null && data.errno == 0) {
+                    p = document.getElementById("op");
+                    p.innerHTML = '';
+                    p = document.getElementById("result");
+                    p.innerHTML = '';
+
+                    cache['tittle'] = '';
+                    cache['model_list'] = '';
+                    $('#1id').html('success!');
+                    get_result()
+
+
+                } else {
+                    alert(data.msg)
+                }
+
+            },
+            error: function () {
+                alert('接口调用失败')
+            },
+        })
+    }
+</script>
+</body>
+</html>
